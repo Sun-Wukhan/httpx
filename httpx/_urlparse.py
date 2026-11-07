@@ -450,7 +450,7 @@ def normalize_path(path: str) -> str:
 
     For example:
 
-        normalize_path("/path/./to/somewhere/..") == "/path/to"
+        normalize_path("/path/./to/somewhere/..") == "/path/to/"
     """
     # Fast return when no '.' characters in the path.
     if "." not in path:
@@ -472,7 +472,12 @@ def normalize_path(path: str) -> str:
                 output.pop()
         else:
             output.append(component)
-    return "/".join(output)
+    result = "/".join(output)
+    if components[-1] in (".", ".."):
+        # The algorithm replaces a trailing "." or ".." segment with
+        # a trailing slash: "/a/.." is "/", and "/a/." is "/a/".
+        result += "/"
+    return result
 
 
 def PERCENT(string: str) -> str:

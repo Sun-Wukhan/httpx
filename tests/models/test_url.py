@@ -263,6 +263,29 @@ def test_url_normalized_path():
     assert url.path == "/abc/ghi/jkl"
 
 
+@pytest.mark.parametrize(
+    "given,path",
+    [
+        ("https://example.com/..", "/"),
+        ("https://example.com/.", "/"),
+        ("https://example.com/a/..", "/"),
+        ("https://example.com/a/.", "/a/"),
+        ("https://example.com/a/b/..", "/a/"),
+        ("https://example.com/a/b/../..", "/"),
+    ],
+)
+def test_url_normalized_path_with_trailing_dot_segments(given, path):
+    # RFC 3986 section 5.2.4 replaces a trailing "." or ".." segment
+    # with a trailing slash, rather than dropping it entirely.
+    url = httpx.URL(given)
+    assert url.path == path
+
+
+def test_url_dot_segments_normalize_to_directory_url():
+    assert httpx.URL("http://example.com/a/..") == httpx.URL("http://example.com/")
+    assert httpx.URL("http://example.com/a/.") == httpx.URL("http://example.com/a/")
+
+
 def test_url_escaped_path():
     url = httpx.URL("https://example.com/ /🌟/")
     assert url.raw_path == b"/%20/%F0%9F%8C%9F/"
