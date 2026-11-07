@@ -255,6 +255,23 @@ def test_url_invalid_port():
     assert str(exc.value) == "Invalid port: 'abc'"
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        ":foo",
+        ":http://example.com/",
+        ":/path",
+    ],
+)
+def test_url_leading_colon_is_invalid(url):
+    # A leading ':' must not be silently consumed as a scheme
+    # delimiter with an empty scheme. In particular the string form
+    # of ':http://example.com/' would otherwise re-parse as an
+    # entirely different, absolute URL.
+    with pytest.raises(httpx.InvalidURL):
+        httpx.URL(url)
+
+
 # Tests for path handling
 
 

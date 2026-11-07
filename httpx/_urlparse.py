@@ -285,6 +285,15 @@ def urlparse(url: str = "", **kwargs: str | None) -> ParseResult:
             if not COMPONENT_REGEX[key].fullmatch(value):
                 raise InvalidURL(f"Invalid URL component '{key}'")
 
+    if url.startswith(":") and not url.startswith("://"):
+        # The regex would otherwise consume a leading ':' as a scheme
+        # delimiter with an empty scheme, silently dropping it, and the
+        # remaining path would no longer be checked against the rule
+        # that a path cannot start with ':'. The "://..." form is the
+        # exception: it is a scheme-less URL with an authority, and is
+        # supported intentionally.
+        raise InvalidURL("Relative URLs cannot have a path starting with ':'")
+
     # The URL_REGEX will always match, but may have empty components.
     url_match = URL_REGEX.match(url)
     assert url_match is not None
