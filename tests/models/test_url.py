@@ -728,6 +728,14 @@ def test_url_merge_params_manipulation():
             None,
         ),
         (
+            "http://www.中国.icom.museum/",
+            "http://www.xn--fiqs8s.icom.museum/",
+            "www.中国.icom.museum",
+            b"www.xn--fiqs8s.icom.museum",
+            "http",
+            None,
+        ),
+        (
             "http://Königsgäßchen.de",
             "http://xn--knigsgchen-b4a3dun.de",
             "königsgäßchen.de",
@@ -770,6 +778,7 @@ def test_url_merge_params_manipulation():
     ],
     ids=[
         "http_with_port",
+        "http_idna_label_not_first",
         "unicode_tr46_compat",
         "https_without_port",
         "https_with_port",
@@ -789,6 +798,13 @@ def test_idna_url(given, idna, host, raw_host, scheme, port):
 def test_url_unescaped_idna_host():
     url = httpx.URL("https://中国.icom.museum/")
     assert url.raw_host == b"xn--fiqs8s.icom.museum"
+
+
+def test_url_invalid_idna_label_host():
+    # A label that looks like punycode but does not decode must not
+    # leak an exception type from the `idna` package out of `.host`.
+    url = httpx.URL("http://xn--a.com/")
+    assert url.host == "xn--a.com"
 
 
 def test_url_escaped_idna_host():

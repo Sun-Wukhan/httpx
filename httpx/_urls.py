@@ -12,6 +12,15 @@ from ._utils import primitive_value_to_str
 __all__ = ["URL", "QueryParams"]
 
 
+def _decode_idna_label(label: str) -> str:
+    if not label.startswith("xn--"):
+        return label
+    try:
+        return idna.decode(label)
+    except idna.IDNAError:
+        return label
+
+
 class URL:
     """
     url = httpx.URL("HTTPS://jo%40email.com:a%20secret@müller.de:1234/pa%20th?search=ab#anchorlink")
@@ -187,8 +196,15 @@ class URL:
         """
         host: str = self._uri_reference.host
 
-        if host.startswith("xn--"):
-            host = idna.decode(host)
+        if "xn--" in host:
+            # Decode each IDNA label individually, so that hosts with a
+            # punycode label in a non-initial position are decoded too.
+            # A label that fails to decode is left in its raw form,
+            # rather than raising an exception type from the `idna`
+            # package out of a property access.
+            host = ".".join(
+                _decode_idna_label(label) for label in host.split(".")
+            )
 
         return host
 
