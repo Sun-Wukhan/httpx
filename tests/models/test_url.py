@@ -249,6 +249,19 @@ def test_url_normalized_port():
     assert url.port is None
 
 
+def test_url_normalized_port_with_uppercase_scheme():
+    # Scheme case must not affect default-port normalization:
+    # schemes are case-insensitive, and are normalized to lowercase.
+    url = httpx.URL("HTTP://example.com:80/")
+    assert url.port is None
+    assert url == httpx.URL("http://example.com/")
+    assert str(url) == "http://example.com/"
+
+    url = httpx.URL("HTTPS://example.com:443/")
+    assert url.port is None
+    assert url == httpx.URL("https://example.com/")
+
+
 def test_url_invalid_port():
     with pytest.raises(httpx.InvalidURL) as exc:
         httpx.URL("https://example.com:abc/")
